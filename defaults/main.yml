@@ -1,0 +1,11 @@
+---
+# defaults file for ansible-role-add-user
+users:
+  - name: inaolajit
+    password: "{{ vault_password_inaolajit }}"
+  - name: babayemio
+    password: "{{ vault_password_babayemio }}"
+  - name: yewandee
+    password: "{{ vault_password_yewandee }}"
+remote_pubkey_path: "~/{{ item.name }}/.ssh/authorized_keys"
+
