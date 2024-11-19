@@ -1,0 +1,6 @@
+---
+# tasks file for ansible-role-add-user
+- include_tasks: prepare.yml
+  tags: 
+    - add_user
+    - cma_add_user

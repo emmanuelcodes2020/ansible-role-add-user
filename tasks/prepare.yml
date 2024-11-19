@@ -1,0 +1,71 @@
+---
+- name: Load vault file
+  include_vars:
+    file: vars/vault.yml
+
+- name: Ensure the users are present
+  ansible.builtin.user:
+    name: "{{ item.name }}"
+    state: present
+    createhome: yes
+    shell: /bin/bash
+  loop: "{{ users }}"
+  loop_control:
+    loop_var: item
+  no_log: true
+
+- name: Set passwords for the users
+  ansible.builtin.command:
+    cmd: echo "{{ item.name }}:{{ item.password }}" | chpasswd
+  loop: "{{ users }}"
+  loop_control:
+    loop_var: item
+  no_log: true
+
+- name: Add users to sudoers with no password prompt
+  ansible.builtin.lineinfile:
+    path: /etc/sudoers
+    state: present
+    regexp: '^{{ item.name }} ALL=(ALL) NOPASSWD:ALL$'
+    line: '{{ item.name }} ALL=(ALL) NOPASSWD:ALL'
+    validate: 'visudo -cf %s'
+  loop: "{{ users }}"
+  loop_control:
+    loop_var: item
+  no_log: true
+
+- name: Create .ssh directory for users
+  ansible.builtin.file:
+    path: "/home/{{ item.name }}/.ssh"
+    state: directory
+    mode: '0700'
+    owner: "{{ item.name }}"
+    group: "{{ item.name }}"
+  loop: "{{ users }}"
+  loop_control:
+    loop_var: item
+  no_log: true
+
+- name: Copy authorized_keys file for users
+  ansible.builtin.copy:
+    src: "authorized_keys"
+    dest: "/home/{{ item.name }}/.ssh/authorized_keys"
+    owner: "{{ item.name }}"
+    group: "{{ item.name }}"
+    mode: '0600'
+  loop: "{{ users }}"
+  loop_control:
+    loop_var: item
+  no_log: true
+
+- name: Set ownership and permissions for .ssh directory and its contents
+  ansible.builtin.file:
+    path: "/home/{{ item.name }}/.ssh"
+    state: directory
+    owner: "{{ item.name }}"
+    group: "{{ item.name }}"
+    recurse: yes
+  loop: "{{ users }}"
+  loop_control:
+    loop_var: item
+  no_log: true
